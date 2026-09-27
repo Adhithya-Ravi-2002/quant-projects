@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data (raw tick data can be large — don't commit it)
+*.parquet
+data/raw/
+
+# OS/editor
+.DS_Store
+.vscode/
