@@ -63,6 +63,9 @@ class _BookSide:
         price = self._prices[-1] if self._descending else self._prices[0]
         return PriceLevel(price, self._sizes[price])
 
+    def size(self, price: int) -> float:
+        return self._sizes.get(_validate_price(price), 0.0)
+
     def levels(self, n: int) -> list[PriceLevel]:
         prices = self._prices[::-1][:n] if self._descending else self._prices[:n]
         return [PriceLevel(p, self._sizes[p]) for p in prices]
@@ -124,6 +127,10 @@ class OrderBook:
         # transient state mid-batch. Callers check is_crossed() at batch boundaries.
         side = self._bids if update.side is Side.BID else self._asks
         side.set(update.price, update.size)
+
+    def size_at(self, side: Side, price: int) -> float:
+        """Resting size at `price` on `side`, 0.0 if the level is absent (including beyond max_levels)."""
+        return (self._bids if side is Side.BID else self._asks).size(price)
 
     def best_bid(self) -> PriceLevel | None:
         return self._bids.best()

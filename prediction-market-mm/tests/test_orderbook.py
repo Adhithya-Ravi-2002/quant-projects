@@ -132,6 +132,31 @@ def test_ask_levels_beyond_max_are_retained_and_promoted() -> None:
     assert book.depth()[1] == [PriceLevel(97, 2.0), PriceLevel(98, 3.0), PriceLevel(99, 4.0)]
 
 
+def test_size_at_existing_and_absent_levels(book: OrderBook) -> None:
+    assert book.size_at(Side.BID, 47) == 250.0
+    assert book.size_at(Side.ASK, 53) == 120.0
+    assert book.size_at(Side.BID, 52) == 0.0  # 52 is an ask price, not a bid
+    assert book.size_at(Side.ASK, 10) == 0.0
+
+
+def test_size_at_tracks_updates(book: OrderBook) -> None:
+    book.apply_update(BookUpdate(Side.BID, 47, 90.0))
+    book.apply_update(BookUpdate(Side.ASK, 52, 0))
+    assert book.size_at(Side.BID, 47) == 90.0
+    assert book.size_at(Side.ASK, 52) == 0.0
+
+
+def test_size_at_sees_levels_beyond_max_levels() -> None:
+    # Level at 1 is 4th best with max_levels=3: hidden from depth() but still stored.
+    book = OrderBook.from_snapshot([(p, float(p)) for p in range(1, 5)], [], max_levels=3)
+    assert book.size_at(Side.BID, 1) == 1.0
+
+
+def test_size_at_rejects_float_price(book: OrderBook) -> None:
+    with pytest.raises(TypeError):
+        book.size_at(Side.BID, 0.47)  # type: ignore[arg-type]
+
+
 def test_is_crossed_and_locked(book: OrderBook) -> None:
     book.apply_update(BookUpdate(Side.BID, 52, 1.0))
     assert book.is_crossed()
